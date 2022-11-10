@@ -75,14 +75,16 @@ class Search():
         options.add_experimental_option(
             "excludeSwitches",
             ["ignore-certificate-errors", "enable-automation"])
-        self.driver = webdriver.Chrome(options=options)
+
+        path = 'chromedriver.exe'
+        self.driver = webdriver.Chrome(path)
 
         '''用户信息'''
-        path = 'chromedriver.exe'
+
         self.xuhao = str("32106100117")
         self.mima = str('Aa18319093951!')
         self.pushplus = str('da9840d244194425bb1d1435fcd662da')
-        self.wdwait = WebDriverWait(self.driver, 60)
+        self.wdwait = WebDriverWait(self.driver, 5)
 
         """浏览器信息"""
         self.url = 'http://jwxt.gzhu.edu.cn/jwglxt/cdjy/cdjy_cxKxcdlb.html?doType=query&gnmkdm=N2155'
@@ -157,17 +159,25 @@ class Search():
                 logger.info(f"第{retries + 1}次运行")
                 if retries:
                     self.refresh()
+                if self.flag:
+                    return
 
+                # 是否在初始页面
                 if self.page == 0:
                     self.step1()
+                # 是否继续或者在融合门户
                 if self.page in [0, 1]:
                     self.step2()
+                if self.page in [0, 1, 2]:
+                    self.step3()
             except Exception:
                 logger.error(traceback.format_exc())
                 logger.error(f'第{retries + 1}次运行失败，当前页面标题为：{self.driver.title}')
 
                 if retries == 9:
                     self.flag = False
+                    logger.info('发送失败消息')
+                    self.output()
 
     def refresh(self):
         refresh_times = 0
@@ -177,16 +187,18 @@ class Search():
             self.driver.refresh()
 
             title = self.driver.title
-            if title == '统一身份认证':
+            if title == '融合门户':
                 self.page = 1
-            elif title == '融合门户':
-                self.page = 2
+            # elif title == '融合门户':
+            #     self.page = 2
             elif title == "":
                 logger.info('当前页面标题为：')
                 refresh_times += 1
                 if refresh_times < 4:
                     continue
             elif self.flag:
+                logger.info('发送成功消息')
+                self.output()
                 return
             else:
                 self.page = 0
@@ -220,13 +232,18 @@ class Search():
         self.driver.find_elements(by=By.XPATH, value='//a[@title="教务系统"]')[0].click()
         '''融合门户'''
 
+    def step3(self):
         '''cookies'''
-        logger.info('提取cookies')
-        temp = self.driver.get_cookies()
+
         time.sleep(2)
+
+        '''广州大学教学综合信息服务平台'''
+        logger.info('提取cookies')
         temp_url = 'http://jwxt.gzhu.edu.cn/jwglxt/cdjy/cdjy_cxKxcdlb.html?gnmkdm=N2155&layout=default&su=32106100117'
         self.driver.get(temp_url)
+
         test = self.driver.get_cookies()
+        print(test)
         cookies = test[0]['name'] + '=' + test[0]['value']
         self.steps(cookies=cookies)
 
@@ -249,7 +266,7 @@ class Search():
                 fp.write(response.text)
             logger.info('正在解析中')
             self.last_list[i] = sorting()
-        self.output()
+
         self.flag = True
 
     '''输出与调整'''
@@ -258,19 +275,29 @@ class Search():
         print('星期', self.realweekday)
         print('************\n\n')
 
-        for i in times_list:
-            self.final = self.final + str(i) + '\n' + str(self.last_list[i]) + '\n\n'
-            print(i)
-            print(self.last_list[i])
-
-            print('************\n\n')
-
         logger.info('发送信息中')
-        if self.pushplus:
-            tim = datetime.datetime.now()
-            data = {"token": self.pushplus, "title": f'{tim.month}月{tim.day}号空教室', "content": self.final + 'aaa'}
-            url = "http://www.pushplus.plus/send/"
-            logger.info(requests.post(url, data=data, timeout=10).text)
+        if self.flag:
+            for i in times_list:
+                self.final = self.final + str(i) + '\n' + str(self.last_list[i]) + '\n\n'
+                print(i)
+                print(self.last_list[i])
+                print('************\n\n')
+
+            if self.pushplus:
+                tim = datetime.datetime.now()
+                data = {"token": self.pushplus, "title": f'{tim.month}月{tim.day}号空教室', "content": self.final}
+                url = "http://www.pushplus.plus/send/"
+                logger.info(requests.post(url, data=data, timeout=10).text)
+            else:
+                logger.error('pushplus失效')
+        else:
+            if self.pushplus:
+                data = {"token": self.pushplus, "title": '空教室查询失败',
+                        "content": f'{logger.error(traceback.format_exc())}'}
+                url = "http://www.pushplus.plus/send/"
+                logger.info(requests.post(url, data=data, timeout=10).text)
+            else:
+                logger.error('pushplus失效')
 
 
 if __name__ == '__main__':
