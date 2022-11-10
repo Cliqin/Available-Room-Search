@@ -77,14 +77,14 @@ class Search():
             ["ignore-certificate-errors", "enable-automation"])
 
         path = 'chromedriver.exe'
-        self.driver = webdriver.Chrome(path)
+        self.driver = webdriver.Chrome(options=options)
 
         '''用户信息'''
 
         self.xuhao = str("32106100117")
         self.mima = str('Aa18319093951!')
         self.pushplus = str('da9840d244194425bb1d1435fcd662da')
-        self.wdwait = WebDriverWait(self.driver, 5)
+        self.wdwait = WebDriverWait(self.driver, 180)
 
         """浏览器信息"""
         self.url = 'http://jwxt.gzhu.edu.cn/jwglxt/cdjy/cdjy_cxKxcdlb.html?doType=query&gnmkdm=N2155'
@@ -189,17 +189,18 @@ class Search():
             title = self.driver.title
             if title == '融合门户':
                 self.page = 1
-            # elif title == '融合门户':
-            #     self.page = 2
+            elif title == '广州大学教学综合信息服务平台':
+                self.page = 2
+            elif self.flag:
+                logger.info('发送成功消息')
+                self.output()
+                return
             elif title == "":
                 logger.info('当前页面标题为：')
                 refresh_times += 1
                 if refresh_times < 4:
                     continue
-            elif self.flag:
-                logger.info('发送成功消息')
-                self.output()
-                return
+
             else:
                 self.page = 0
             break
@@ -235,7 +236,7 @@ class Search():
     def step3(self):
         '''cookies'''
 
-        time.sleep(2)
+        time.sleep(5)
 
         '''广州大学教学综合信息服务平台'''
         logger.info('提取cookies')
