@@ -156,7 +156,7 @@ class Search():
             try:
                 logger.info(f"第{retries + 1}次运行")
                 if retries:
-                    '''刷新'''
+                    self.refresh()
 
                 if self.page == 0:
                     self.step1()
