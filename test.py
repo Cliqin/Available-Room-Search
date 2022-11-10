@@ -133,7 +133,7 @@ class Search():
 
         '''页面数据'''
         self.page = 0
-        self.fail = False
+        self.flag = False
 
         timing = datetime.datetime.now()
 
@@ -167,10 +167,10 @@ class Search():
                 logger.error(f'第{retries + 1}次运行失败，当前页面标题为：{self.driver.title}')
 
                 if retries == 9:
-                    self.fail = True
+                    self.flag = False
 
     def refresh(self):
-        refresh_time = 0
+        refresh_times = 0
 
         while True:
             logger.info('刷新页面')
@@ -181,8 +181,17 @@ class Search():
                 self.page = 1
             elif title == '融合门户':
                 self.page = 2
+            elif title == "":
+                logger.info('当前页面标题为：')
+                refresh_times += 1
+                if refresh_times < 4:
+                    continue
+            elif self.flag:
+                return
             else:
                 self.page = 0
+            break
+        logger.info(f'当前页面标题为：{title}')
 
     def step1(self):
         logger.info('正在转到统一身份认证页面')
@@ -219,7 +228,6 @@ class Search():
         self.driver.get(temp_url)
         test = self.driver.get_cookies()
         cookies = test[0]['name'] + '=' + test[0]['value']
-
         self.steps(cookies=cookies)
 
     '''关键步骤'''
@@ -241,6 +249,8 @@ class Search():
                 fp.write(response.text)
             logger.info('正在解析中')
             self.last_list[i] = sorting()
+        self.output()
+        self.flag = True
 
     '''输出与调整'''
 
@@ -258,13 +268,11 @@ class Search():
         logger.info('发送信息中')
         if self.pushplus:
             tim = datetime.datetime.now()
-            data = {"token": self.pushplus, "title": f'{tim.month}月{tim.day}号空教室', "content": self.final}
+            data = {"token": self.pushplus, "title": f'{tim.month}月{tim.day}号空教室', "content": self.final + 'aaa'}
             url = "http://www.pushplus.plus/send/"
             logger.info(requests.post(url, data=data, timeout=10).text)
 
 
 if __name__ == '__main__':
     r = Search()
-    r.step1()
-    r.step2()
-    r.output()
+    r.login()
