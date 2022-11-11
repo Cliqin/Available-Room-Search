@@ -1,3 +1,6 @@
+import os
+import sys
+
 import json
 import jsonpath
 import requests
