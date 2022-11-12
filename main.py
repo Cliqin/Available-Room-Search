@@ -97,7 +97,7 @@ class Normal:
         # self.pushplus = ['da9840d244194425bb1d1435fcd662da', '50ed8dfec78243959c88914a9d61ac13']
         self.pushplus = ['da9840d244194425bb1d1435fcd662da']
         self.wdwait = WebDriverWait(self.driver, 90)
-        self.titlewait = WebDriverWait(self.driver, 30)
+        self.titlewait = WebDriverWait(self.driver, 45)
 
         '''-*----------'''
         self.last_list = {}
@@ -211,8 +211,9 @@ class Normal:
 
         while True:
             logger.info('刷新页面')
-            self.driver.refresh()
-
+            # self.driver.refresh()
+            self.driver.get('http://jwxt.gzhu.edu.cn/sso/driot4login')
+            
             try:
                 self.titlewait.until(
                     EC.presence_of_all_elements_located((By.TAG_NAME, "title"))
@@ -286,14 +287,19 @@ class Normal:
         logger.info('正在搜索广州大学教学综合信息服务平台标题')
         self.titlewait.until(EC.title_contains("广州大学教学综合信息"))
         logger.info(f'当前的标题为:{self.driver.title}')
+        
         '''广州大学教学综合信息服务平台'''
+        logger.info('等待5秒钟')
+        time.sleep(6)
         logger.info('提取cookies')
         temp_url = f'http://jwxt.gzhu.edu.cn/jwglxt/cdjy/cdjy_cxKxcdlb.html?gnmkdm=N2155&layout=default&su={self.xuhao}'
         self.driver.get(temp_url)
 
     def step3(self):
+        logger.info('正在搜索空闲教室标题')
         self.titlewait.until(EC.title_contains("空闲教室"))
         logger.info(f'当前的标题为:{self.driver.title}')
+
         logger.info('获取cookies')
         test = self.driver.get_cookies()
         print('cookies为:', test)
