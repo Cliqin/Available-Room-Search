@@ -99,8 +99,8 @@ class Search:
         self.mima = str('Aa18319093951!')
         # self.pushplus = ['da9840d244194425bb1d1435fcd662da', '50ed8dfec78243959c88914a9d61ac13']
         self.pushplus = ['da9840d244194425bb1d1435fcd662da']
-        self.wdwait = WebDriverWait(self.driver, 60)
-        self.titlewait = WebDriverWait(self.driver, 10)
+        self.wdwait = WebDriverWait(self.driver, 90)
+        self.titlewait = WebDriverWait(self.driver, 30)
 
         """浏览器信息"""
         self.url = 'http://jwxt.gzhu.edu.cn/jwglxt/cdjy/cdjy_cxKxcdlb.html?doType=query&gnmkdm=N2155'
@@ -240,7 +240,7 @@ class Search:
                     self.page = 1
                 case '融合门户':
                     self.page = 2
-                case '广州大学教学综合信息服务':
+                case '广州大学教学综合信息服务平台':
                     self.page = 3
                 case '查询空闲教室':
                     self.page = 4
@@ -292,7 +292,7 @@ class Search:
 
     def step3(self):
         ''''cookies'''
-        self.titlewait.until(EC.title_contains("广州大学教学综合信息服务"))
+        self.titlewait.until(EC.title_contains("广州大学教学综合信息服务平台"))
         '''广州大学教学综合信息服务平台'''
         logger.info('提取cookies')
         temp_url = 'http://jwxt.gzhu.edu.cn/jwglxt/cdjy/cdjy_cxKxcdlb.html?gnmkdm=N2155&layout=default&su=32106100117'
