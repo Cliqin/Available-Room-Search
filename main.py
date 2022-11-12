@@ -213,7 +213,7 @@ class Normal:
             logger.info('刷新页面')
             # self.driver.refresh()
             self.driver.get('http://jwxt.gzhu.edu.cn/sso/driot4login')
-            
+
             try:
                 self.titlewait.until(
                     EC.presence_of_all_elements_located((By.TAG_NAME, "title"))
@@ -287,7 +287,7 @@ class Normal:
         logger.info('正在搜索广州大学教学综合信息服务平台标题')
         self.titlewait.until(EC.title_contains("广州大学教学综合信息"))
         logger.info(f'当前的标题为:{self.driver.title}')
-        
+
         '''广州大学教学综合信息服务平台'''
         logger.info('等待5秒钟')
         time.sleep(6)
