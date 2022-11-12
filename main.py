@@ -66,6 +66,40 @@ def sorting(dic):
 
 class Normal:
     def __init__(self):
+        options = Options()
+        optionsList = [
+            "--headless",
+            "--enable-javascript",
+            "start-maximized",
+            "--disable-gpu",
+            "--blink-settings=imagesEnabled=false",
+            "--disable-extensions",
+            "--no-sandbox",
+            "--disable-browser-side-navigation",
+            "--disable-dev-shm-usage",
+        ]
+        for option in optionsList:
+            options.add_argument(option)
+
+        options.page_load_strategy = 'none'
+        options.add_experimental_option(
+            "excludeSwitches", ["ignore-certificate-errors", "enable-automation"]
+        )
+
+        path = 'chromedriver.exe'
+        self.driver = webdriver.Chrome(options=options)
+        # self.driver = webdriver.Chrome(path)
+
+        '''用户信息'''
+
+        self.xuhao = str("32106100117")
+        self.mima = str('Aa18319093951!')
+        # self.pushplus = ['da9840d244194425bb1d1435fcd662da', '50ed8dfec78243959c88914a9d61ac13']
+        self.pushplus = ['da9840d244194425bb1d1435fcd662da']
+        self.wdwait = WebDriverWait(self.driver, 90)
+        self.titlewait = WebDriverWait(self.driver, 30)
+
+        '''-*----------'''
         self.last_list = {}
         self.final = ''
 
@@ -130,6 +164,142 @@ class Normal:
             fp.write(str(self.weeking + 1))
             fp.close()
 
+    def login(self):
+        for retries in range(5):
+            try:
+                logger.info(f"第{retries + 1}次运行")
+                if retries:
+                    self.refresh()
+                if self.flag:
+                    return
+
+                # 是否在初始页面
+                if self.page == 0:
+                    # 访问统一身份验证
+                    self.step0()
+                # 是否继续或者在融合门户
+                if self.page in [0, 1]:
+                    # 当前在统一身份验证,现在执行登陆
+                    self.step1()
+                if self.page in [0, 1, 2]:
+                    self.step2()
+                if self.page in [0, 1, 2, 3]:
+                    self.step3()
+
+            except selenium.common.exceptions.TimeoutException:
+                logger.error(traceback.format_exc())
+
+                if not self.driver.title:
+                    logger.error(f"第{retries + 1}次运行失败，当前页面标题为空")
+                else:
+                    logger.error(f"第{retries + 1}次运行失败，当前页面标题为：{self.driver.title}")
+
+                if retries == 4:
+                    self.flag = False
+                    logger.info('发送失败消息')
+                    self.output()
+
+        self.driver.quit()
+
+    def refresh(self):
+        """刷新页面，直到页面标题不为空
+
+        Raises:
+            selenium.common.exceptions.TimeoutException: 页面刷新次数达到上限
+        """
+        refresh_times = 0
+
+        while True:
+            logger.info('刷新页面')
+            self.driver.refresh()
+
+            try:
+                self.titlewait.until(
+                    EC.presence_of_all_elements_located((By.TAG_NAME, "title"))
+                )
+            except selenium.common.exceptions.TimeoutException:
+                pass
+
+            title = self.driver.title
+
+            # 判断是否查询成功
+            if self.flag:
+                logger.info('发送成功消息')
+                self.output()
+                return
+
+            match title:
+                case 'Unified Identity Authentication':
+                    self.page = 1
+                    logger.info(f'1已重置page为:{self.page}')
+                case '统一身份认证':
+                    self.page = 1
+                    logger.info(f'2已重置page为:{self.page}')
+                case '广州大学教学综合信息服务平台':
+                    self.page = 2
+                    logger.info(f'已重置page为:{self.page}')
+                case '查询空闲教室':
+                    self.page = 3
+                    logger.info(f'已重置page为:{self.page}')
+                case "":
+                    logger.info('match函数匹配失败')
+                    logger.info(f'当前页面标题为：{title}')
+                    refresh_times += 1
+                    if refresh_times < 5:
+                        continue
+                    raise selenium.common.exceptions.TimeoutException("页面刷新次数达到上限")
+                case _:
+                    self.page = 0
+                    logger.info(f'已重置page为:{self.page}')
+            break
+        logger.info(f'*最后*当前页面标题为：{title},当前的页面编号为:{self.page}')
+
+    def step0(self):
+        logger.info('第零步:直接跳转登录页面')
+        logger.info('正在转到!教务系统!的统一身份认证页面')
+        self.driver.get('http://jwxt.gzhu.edu.cn/sso/driot4login')
+
+    def step1(self):
+
+        # logger.info('正在搜索Unified Identity Authentication标题')
+        # self.titlewait.until(EC.title_contains("Unified Identity Authentication"))
+        logger.info('正在搜索是否有机器人图标')
+        self.wdwait.until(
+            EC.visibility_of_element_located(
+                (By.XPATH, "//div[@class='robot-mag-win small-big-small']")
+            )
+        )
+        logger.info(f'当前的标题为:{self.driver.title}')
+
+        logger.info('正在尝试登陆!教务系统!的统一身份认证页面')
+        for script in [
+            f"document.getElementById('un').value='{self.xuhao}'",
+            f"document.getElementById('pd').value='{self.mima}'",
+            "document.getElementById('index_login_btn').click()"
+        ]:
+            self.driver.execute_script(script)
+        logger.info('点了登陆之后再等10秒')
+        time.sleep(10)
+
+    def step2(self):
+        ''''cookies'''
+        logger.info('正在搜索广州大学教学综合信息服务平台标题')
+        self.titlewait.until(EC.title_contains("广州大学教学综合信息"))
+        logger.info(f'当前的标题为:{self.driver.title}')
+        '''广州大学教学综合信息服务平台'''
+        logger.info('提取cookies')
+        temp_url = f'http://jwxt.gzhu.edu.cn/jwglxt/cdjy/cdjy_cxKxcdlb.html?gnmkdm=N2155&layout=default&su={self.xuhao}'
+        self.driver.get(temp_url)
+
+    def step3(self):
+        self.titlewait.until(EC.title_contains("空闲教室"))
+        logger.info(f'当前的标题为:{self.driver.title}')
+        logger.info('获取cookies')
+        test = self.driver.get_cookies()
+        print('cookies为:', test)
+        cookies = test[0]['name'] + '=' + test[0]['value']
+        self.steps(cookies=cookies)
+
     def steps(self, cookies):
         logger.info('输入cookies')
         self.headers['Cookie'] = cookies
@@ -184,5 +354,4 @@ class Normal:
 
 if __name__ == '__main__':
     a = Normal()
-    a.steps('JSESSIONID=9167C91EE5BA6D069FAA218B3A6C6170')
-    a.output()
+    a.login()
