@@ -94,7 +94,7 @@ class Normal:
 
         self.xuhao = str("32106100117")
         self.mima = str('Aa18319093951!')
-        self.pushplus = ['da9840d244194425bb1d1435fcd662da', '50ed8dfec78243959c88914a9d61ac13']
+        self.pushplus = ['da9840d244194425bb1d1435fcd662da', '50ed8dfec78243959c88914a9d61ac13','9148910d5fb448359292689ca7c0c443']
 #         self.pushplus = ['da9840d244194425bb1d1435fcd662da']
         self.wdwait = WebDriverWait(self.driver, 90)
         self.titlewait = WebDriverWait(self.driver, 45)
