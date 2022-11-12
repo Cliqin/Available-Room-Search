@@ -74,18 +74,19 @@ class Search:
             "--enable-javascript",
             "start-maximized",
             "--disable-gpu",
+            "--blink-settings=imagesEnabled=false",
             "--disable-extensions",
             "--no-sandbox",
             "--disable-browser-side-navigation",
-            "--disable-dev-shm-usage"
+            "--disable-dev-shm-usage",
         ]
         for option in optionsList:
             options.add_argument(option)
 
         options.page_load_strategy = 'none'
         options.add_experimental_option(
-            "excludeSwitches",
-            ["ignore-certificate-errors", "enable-automation"])
+            "excludeSwitches", ["ignore-certificate-errors", "enable-automation"]
+        )
 
         path = 'chromedriver.exe'
         self.driver = webdriver.Chrome(options=options)
@@ -98,7 +99,7 @@ class Search:
         # self.pushplus = ['da9840d244194425bb1d1435fcd662da', '50ed8dfec78243959c88914a9d61ac13']
         self.pushplus = ['da9840d244194425bb1d1435fcd662da']
         self.wdwait = WebDriverWait(self.driver, 90)
-        self.titlewait = WebDriverWait(self.driver, 90)
+        self.titlewait = WebDriverWait(self.driver, 30)
 
         """浏览器信息"""
         self.url = 'http://jwxt.gzhu.edu.cn/jwglxt/cdjy/cdjy_cxKxcdlb.html?doType=query&gnmkdm=N2155'
@@ -204,6 +205,8 @@ class Search:
                     logger.info('发送失败消息')
                     self.output()
 
+        self.driver.quit()
+
     def refresh(self):
         """刷新页面，直到页面标题不为空
 
@@ -270,17 +273,15 @@ class Search:
         '''统一身份认证'''
 
     def step1(self):
-        # logger.info('正在搜索Unified Identity Authentication标题')
-        # self.titlewait.until(EC.title_contains())
-        # //*[@id="un"]
+        logger.info(f'当前的标题为:{self.driver.title}')
+        logger.info('正在搜索Unified Identity Authentication标题')
+        self.titlewait.until(EC.title_contains("Unified Identity Authentication"))
         logger.info('正在搜索是否有机器人图标')
         self.wdwait.until(
             EC.visibility_of_element_located(
-                (By.XPATH, "//*[@id='robot-msg']")))
-
-        # self.wdwait.until(
-        #     EC.visibility_of_element_located(
-        #         (By.XPATH, '//*[@id="login-background"]/div[1]/div/div[2]/div[2]/div/div[1]')))
+                (By.XPATH, "//div[@class='robot-mag-win small-big-small']")
+            )
+        )
 
         '''统一身份认证'''
         logger.info('正在尝试登陆融合门户')
@@ -296,8 +297,9 @@ class Search:
 
     def step2(self):
         '''融合门户'''
-        # logger.info('正在搜索融合门户标题')
-        # self.titlewait.until(EC.title_contains("融合"))
+        logger.info(f'当前的标题为:{self.driver.title}')
+        logger.info('正在搜索融合门户标题')
+        self.titlewait.until(EC.title_contains("融合门户"))
         # logger.info('正在搜索教务系统图标')
         # self.wdwait.until(EC.visibility_of_element_located((By.XPATH, '//a[@title="教务系统"]/img')))
         logger.info('正在转到教务系统')
@@ -308,7 +310,8 @@ class Search:
 
     def step3(self):
         ''''cookies'''
-        logger.info('正在搜索广州大学教学综合信息服务平台标题')
+        logger.info(f'当前的标题为:{self.driver.title}')
+        logger.info('正在搜索广州大学教学综合信息服务平台标题')      
         self.titlewait.until(EC.title_contains("广州大学教学综合信息"))
         '''广州大学教学综合信息服务平台'''
         logger.info('提取cookies')
