@@ -1,16 +1,21 @@
 import json
-import traceback
-
 import jsonpath
+import requests
+import os
+import sys
+import traceback
+from loguru import logger
+
 import datetime
 import time
+
+import selenium.common
 from selenium import webdriver
-import requests
-from loguru import logger
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.relative_locator import locate_with
 
 # 周次表示
 weeks = {
@@ -49,13 +54,18 @@ times_dic = {
 times_list = ['上午12', '上午34', '下午56', '下午78', '晚上910']
 
 
-def sorting():
-    obj = json.load(open('result.json', 'r', encoding='utf-8'))
-    course_list = jsonpath.jsonpath(obj, '$..cdmc')
+def sorting(dic):
+    # obj = json.load(open('result.json', 'r', encoding='utf-8'))
+    # course_list = jsonpath.jsonpath(obj, '$..cdmc')
+    course_list = []
+    listing = json.loads(dic)['items']
+    for i in listing:
+        course_list.append(i['cdmc'])
     return course_list
 
 
-class Search():
+class Search:
+
     def __init__(self):
         '''设置无头浏览'''
         options = Options()
@@ -71,18 +81,24 @@ class Search():
         ]
         for option in optionsList:
             options.add_argument(option)
+
         options.page_load_strategy = 'none'
         options.add_experimental_option(
             "excludeSwitches",
             ["ignore-certificate-errors", "enable-automation"])
+
+        path = 'chromedriver.exe'
         self.driver = webdriver.Chrome(options=options)
+        # self.driver = webdriver.Chrome(path)
 
         '''用户信息'''
-        path = 'chromedriver.exe'
+
         self.xuhao = str("32106100117")
         self.mima = str('Aa18319093951!')
-        self.pushplus = str('da9840d244194425bb1d1435fcd662da')
-        self.wdwait = WebDriverWait(self.driver, 60)
+        # self.pushplus = ['da9840d244194425bb1d1435fcd662da', '50ed8dfec78243959c88914a9d61ac13']
+        self.pushplus = ['da9840d244194425bb1d1435fcd662da']
+        self.wdwait = WebDriverWait(self.driver, 90)
+        self.titlewait = WebDriverWait(self.driver, 30)
 
         """浏览器信息"""
         self.url = 'http://jwxt.gzhu.edu.cn/jwglxt/cdjy/cdjy_cxKxcdlb.html?doType=query&gnmkdm=N2155'
@@ -133,7 +149,7 @@ class Search():
 
         '''页面数据'''
         self.page = 0
-        self.fail = False
+        self.flag = False
 
         timing = datetime.datetime.now()
 
@@ -152,44 +168,102 @@ class Search():
             fp.close()
 
     def login(self):
-        for retries in range(10):
+        for retries in range(5):
             try:
                 logger.info(f"第{retries + 1}次运行")
                 if retries:
-                    '''刷新'''
+                    self.refresh()
+                if self.flag:
+                    return
 
+                # 是否在初始页面
                 if self.page == 0:
-                    self.step1()
+                    # 访问统一身份验证
+                    self.step0()
+                # 是否继续或者在融合门户
                 if self.page in [0, 1]:
+                    # 当前在统一身份验证,现在执行登陆
+                    self.step1()
+                if self.page in [0, 1, 2]:
                     self.step2()
-            except Exception:
-                logger.error(traceback.format_exc())
-                logger.error(f'第{retries + 1}次运行失败，当前页面标题为：{self.driver.title}')
+                if self.page in [0, 1, 2, 3]:
+                    self.step3()
+                if self.page in [0, 1, 2, 3, 4]:
+                    self.step4()
 
-                if retries == 9:
-                    self.fail = True
+            except selenium.common.exceptions.TimeoutException:
+                logger.error(traceback.format_exc())
+
+                if not self.driver.title:
+                    logger.error(f"第{retries + 1}次运行失败，当前页面标题为空")
+                else:
+                    logger.error(f"第{retries + 1}次运行失败，当前页面标题为：{self.driver.title}")
+
+                if retries == 4:
+                    self.flag = False
+                    logger.info('发送失败消息')
+                    self.output()
 
     def refresh(self):
-        refresh_time = 0
+        """刷新页面，直到页面标题不为空
+
+        Raises:
+            selenium.common.exceptions.TimeoutException: 页面刷新次数达到上限
+        """
+        refresh_times = 0
 
         while True:
             logger.info('刷新页面')
             self.driver.refresh()
 
-            title = self.driver.title
-            if title == '统一身份认证':
-                self.page = 1
-            elif title == '融合门户':
-                self.page = 2
-            else:
-                self.page = 0
+            try:
+                self.titlewait.until(
+                    EC.presence_of_all_elements_located((By.TAG_NAME, "title"))
+                )
+            except selenium.common.exceptions.TimeoutException:
+                pass
 
-    def step1(self):
+            title = self.driver.title
+
+            # 判断是否查询成功
+            if self.flag:
+                logger.info('发送成功消息')
+                self.output()
+                return
+
+            match title:
+                case 'Unified Identity Authentication':
+                    self.page = 1
+                case '统一身份认证':
+                    self.page = 1
+                case '融合门户':
+                    self.page = 2
+                case '广州大学教学综合信息服务平台':
+                    self.page = 3
+                case '查询空闲教室':
+                    self.page = 4
+                case "":
+                    logger.info('当前页面标题为：')
+                    refresh_times += 1
+                    if refresh_times < 4:
+                        continue
+                    raise selenium.common.exceptions.TimeoutException("页面刷新次数达到上限")
+                case _:
+                    self.page = 0
+            break
+        logger.info(f'当前页面标题为：{title},当前的页面编号为:{self.page}')
+
+    def step0(self):
+        """转到统一身份认证界面"""
         logger.info('正在转到统一身份认证页面')
         self.driver.get(
             'https://newcas.gzhu.edu.cn/cas/login?service=https%3A%2F%2Fnewmy.gzhu.edu.cn%2Fup%2Fview%3Fm%3Dup'
         )
         '''统一身份认证'''
+
+    def step1(self):
+        # self.titlewait.until(EC.title_contains("Unified Identity Authentication" or "统一身份认证"))
+
         self.wdwait.until(
             EC.visibility_of_element_located(
                 (By.XPATH, "//div[@class='robot-mag-win small-big-small']")))
@@ -206,26 +280,34 @@ class Search():
 
     def step2(self):
         '''融合门户'''
+        self.titlewait.until(EC.title_contains("融合门户"))
         self.wdwait.until(EC.visibility_of_element_located((By.XPATH, '//a[@title="教务系统"]/img')))
         logger.info('正在转到教务系统')
-        self.driver.find_elements(by=By.XPATH, value='//a[@title="教务系统"]')[0].click()
-        '''融合门户'''
 
-        '''cookies'''
+        # 直接跳转到教务系统
+        # self.driver.find_elements(by=By.XPATH, value='//a[@title="教务系统"]')[0].click()
+        self.driver.get('http://jwxt.gzhu.edu.cn/sso/driot4login')
+
+    def step3(self):
+        ''''cookies'''
+        self.titlewait.until(EC.title_contains("广州大学教学综合信息服务平台"))
+        '''广州大学教学综合信息服务平台'''
         logger.info('提取cookies')
-        temp = self.driver.get_cookies()
-        time.sleep(2)
         temp_url = 'http://jwxt.gzhu.edu.cn/jwglxt/cdjy/cdjy_cxKxcdlb.html?gnmkdm=N2155&layout=default&su=32106100117'
         self.driver.get(temp_url)
-        test = self.driver.get_cookies()
-        cookies = test[0]['name'] + '=' + test[0]['value']
 
+    def step4(self):
+        self.titlewait.until(EC.title_contains("查询空闲教室"))
+        logger.info('获取cookies')
+        test = self.driver.get_cookies()
+        print('cookies为:', test)
+        cookies = test[0]['name'] + '=' + test[0]['value']
         self.steps(cookies=cookies)
 
     '''关键步骤'''
 
     def steps(self, cookies):
-        logger.info('变换cookies')
+        logger.info('输入cookies')
         self.headers['Cookie'] = cookies
         # 放入节次循环中
         logger.info('进入查询')
@@ -234,13 +316,16 @@ class Search():
             print(self.data['zcd'], self.data['xqj'], self.data['jcd'])
 
             response = requests.post(self.url, headers=self.headers, data=self.data)
-            # print(response.status_code)
-            # print(response.text)
-            logger.info('打开文件写入')
-            with open('result.json', 'w', encoding='utf‐8') as fp:
-                fp.write(response.text)
-            logger.info('正在解析中')
-            self.last_list[i] = sorting()
+
+            # 摒弃依靠写入文件的存储模式
+            # logger.info('打开文件写入')
+            # with open('result.json', 'w', encoding='utf‐8') as fp:
+            #     fp.write(response.text)
+            # logger.info('正在解析中')
+
+            self.last_list[i] = sorting(response.text)
+
+        self.flag = True
 
     '''输出与调整'''
 
@@ -248,23 +333,33 @@ class Search():
         print('星期', self.realweekday)
         print('************\n\n')
 
-        for i in times_list:
-            self.final = self.final + str(i) + '\n' + str(self.last_list[i]) + '\n\n'
-            print(i)
-            print(self.last_list[i])
-
-            print('************\n\n')
-
         logger.info('发送信息中')
-        if self.pushplus:
-            tim = datetime.datetime.now()
-            data = {"token": self.pushplus, "title": f'{tim.month}月{tim.day}号空教室', "content": self.final}
-            url = "http://www.pushplus.plus/send/"
-            logger.info(requests.post(url, data=data, timeout=10).text)
+        if self.flag:
+            for i in times_list:
+                self.final = self.final + str(i) + '\n' + str(self.last_list[i]) + '\n\n'
+                print(i)
+                print(self.last_list[i])
+                print('************\n\n')
+
+            if self.pushplus:
+                for i in self.pushplus:
+                    tim = datetime.datetime.now()
+                    data = {"token": i, "title": f'{tim.month}月{tim.day}号空教室', "content": self.final + '龙哥,教我java'}
+                    url = "http://www.pushplus.plus/send/"
+                    logger.info(requests.post(url, data=data, timeout=10).text)
+            else:
+                logger.error('pushplus失效')
+        else:
+            if self.pushplus:
+                for i in self.pushplus:
+                    data = {"token": i, "title": '空教室查询失败',
+                            "content": f'{logger.error(traceback.format_exc())}'}
+                    url = "http://www.pushplus.plus/send/"
+                    logger.info(requests.post(url, data=data, timeout=10).text)
+            else:
+                logger.error('pushplus失效')
 
 
 if __name__ == '__main__':
     r = Search()
-    r.step1()
-    r.step2()
-    r.output()
+    r.login()

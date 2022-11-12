@@ -1,0 +1,22 @@
+name: search
+
+on:
+  schedule:
+    - cron: '10 0,2,4,6,8,10,12,14,16 * * *'
+
+  workflow_dispatch:
+
+jobs:
+  Search:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10.6'
+
+      - run: pip3 install -r requirements.txt
+      
+      - run: python test.py
