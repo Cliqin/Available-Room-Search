@@ -42,6 +42,7 @@ weeks = {
 }
 # 星期几
 week_list = [1, 2, 3, 4, 5, 6, 7]
+week_Chinese_list = ['空', '一', '二', '三', '四', '五', '六', '日']
 # 节次字典
 times_dic = {
     '上午12': 3,
@@ -92,18 +93,22 @@ class Normal:
 
         '''用户信息'''
 
-        self.xuhao = str("32106100117")
-        self.mima = str('Aa18319093951!')
-        self.pushplus = ['da9840d244194425bb1d1435fcd662da', '50ed8dfec78243959c88914a9d61ac13','9148910d5fb448359292689ca7c0c443']
-#         self.pushplus = ['da9840d244194425bb1d1435fcd662da']
-        self.wdwait = WebDriverWait(self.driver, 90)
-        self.titlewait = WebDriverWait(self.driver, 45)
+        self.xuhao = str(os.environ["ID"])
+        self.mima = str(os.environ["PW"])
+#       何辉
+        token_1 = str(os.environ['TOKEN_1'])
+#       马龙
+        token_2 = str(os.environ['TOKEN_2'])
+#       谢轩
+        token_3 = str(os.environ['TOKEN_3'])
+        self.pushplus = [token_1,token_2,token_3]
+        #         
+        self.wdwait = WebDriverWait(self.driver, 100)
+        self.titlewait = WebDriverWait(self.driver, 50)
 
         '''-*----------'''
         self.last_list = {}
         self.final = ''
-
-
 
         timing = datetime.datetime.now()
 
@@ -154,18 +159,20 @@ class Normal:
         self.realweekday = (week_list[timing.weekday()])
         self.data['xqj'] = self.realweekday
         # 录入周次
-        fp = open('weeklog.txt', 'r', encoding='utf-8')
-        self.weeking = int(fp.read())
-        fp.close()
+        #         fp = open('weeklog.txt', 'r', encoding='utf-8')
+        #         self.weeking = int(fp.read())
+        #         fp.close()
+        self.weeking = self.weekorient()
         self.data['zcd'] = weeks[self.weeking]
         # 并判断是否调整周次
-        if int(week_list[timing.weekday()]) == 7:
-            fp = open('weeklog.txt', 'w', encoding='utf-8')
-            fp.write(str(self.weeking + 1))
-            fp.close()
+
+    #         if int(week_list[timing.weekday()]) == 7:
+    #             fp = open('weeklog.txt', 'w', encoding='utf-8')
+    #             fp.write(str(self.weeking + 1))
+    #             fp.close()
 
     def login(self):
-        for retries in range(5):
+        for retries in range(6):
             try:
                 logger.info(f"第{retries + 1}次运行")
                 if retries:
@@ -194,7 +201,7 @@ class Normal:
                 else:
                     logger.error(f"第{retries + 1}次运行失败，当前页面标题为：{self.driver.title}")
 
-                if retries == 4:
+                if retries == 5:
                     self.flag = False
                     logger.info('发送失败消息')
                     self.output()
@@ -342,20 +349,36 @@ class Normal:
             if self.pushplus:
                 for i in self.pushplus:
                     tim = datetime.datetime.now()
-                    data = {"token": i, "title": f'{tim.month}月{tim.day}号空教室', "content":  f'龙哥,这是全天测试版本{tim.hour}' +self.final}
+                    data = {"token": i,
+                            "title": f'第{self.weeking}周{tim.month}月{tim.day}号星期{week_Chinese_list[self.realweekday]}空教室',
+                            "content": f'防止重复码{tim.hour}\n' + self.final}
                     url = "http://www.pushplus.plus/send/"
-                    logger.info(requests.post(url, data=data, timeout=10).text)
+                    logger.info(requests.post(url, data=data, timeout=20).text)
             else:
                 logger.error('pushplus失效')
         else:
             if self.pushplus:
                 for i in self.pushplus:
-                    data = {"token": i, "title": '空教室查询失败',
+                    tim = datetime.datetime.now()
+                    data = {"token": i, "title": f'第{self.weeking}周{tim.month}月{tim.day}号星期{week_Chinese_list[self.realweekday]}空教室查询失败',
                             "content": f'{logger.error(traceback.format_exc())}'}
                     url = "http://www.pushplus.plus/send/"
-                    logger.info(requests.post(url, data=data, timeout=10).text)
+                    logger.info(requests.post(url, data=data, timeout=20).text)
             else:
                 logger.error('pushplus失效')
+
+    def weekorient(self):
+        week = 1
+        time_1 = '2022-9-4'
+        now_time = datetime.datetime.now()
+        time_2 = f'{now_time.year}-{now_time.month}-{now_time.day}'
+        time_1_struct = datetime.datetime.strptime(time_1, "%Y-%m-%d")
+        time_2_struct = datetime.datetime.strptime(time_2, "%Y-%m-%d")
+        total_seconds = (time_2_struct - time_1_struct).total_seconds()
+        day_sub = total_seconds / (60 * 24 * 60)
+        nowweek = int(week + day_sub / 7)
+        print(f'now_week:{nowweek}')
+        return nowweek
 
 
 if __name__ == '__main__':
