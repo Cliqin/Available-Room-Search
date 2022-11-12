@@ -103,7 +103,7 @@ class Normal:
         self.last_list = {}
         self.final = ''
 
-        self.pushplus = ['da9840d244194425bb1d1435fcd662da']
+
 
         timing = datetime.datetime.now()
 
