@@ -253,7 +253,7 @@ class Search:
                 case _:
                     self.page = 0
             break
-        logger.info(f'当前页面标题为：{title}')
+        logger.info(f'当前页面标题为：{title}，当前页面编号为：{self.page}')
 
     def step0(self):
         """转到统一身份认证界面"""
