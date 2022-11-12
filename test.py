@@ -234,27 +234,35 @@ class Search:
             match title:
                 case 'Unified Identity Authentication':
                     self.page = 1
+                    logger.info(f'已重置page为:{self.page}')
                 case '统一身份认证':
                     self.page = 1
+                    logger.info(f'已重置page为:{self.page}')
                 case '融合门户':
                     self.page = 2
+                    logger.info(f'已重置page为:{self.page}')
                 case '广州大学教学综合信息服务平台':
                     self.page = 3
+                    logger.info(f'已重置page为:{self.page}')
                 case '查询空闲教室':
                     self.page = 4
+                    logger.info(f'已重置page为:{self.page}')
                 case "":
-                    logger.info('当前页面标题为：')
+                    logger.info('match函数匹配失败')
+                    logger.info(f'当前页面标题为：{title}')
                     refresh_times += 1
-                    if refresh_times < 4:
+                    if refresh_times < 5:
                         continue
                     raise selenium.common.exceptions.TimeoutException("页面刷新次数达到上限")
                 case _:
                     self.page = 0
+                    logger.info(f'已重置page为:{self.page}')
             break
-        logger.info(f'当前页面标题为：{title},当前的页面编号为:{self.page}')
+        logger.info(f'*最后*当前页面标题为：{title},当前的页面编号为:{self.page}')
 
     def step0(self):
         """转到统一身份认证界面"""
+        logger.info('第零步:直接跳转登录页面')
         logger.info('正在转到统一身份认证页面')
         self.driver.get(
             'https://newcas.gzhu.edu.cn/cas/login?service=https%3A%2F%2Fnewmy.gzhu.edu.cn%2Fup%2Fview%3Fm%3Dup'
@@ -263,10 +271,15 @@ class Search:
 
     def step1(self):
         # self.titlewait.until(EC.title_contains("Unified Identity Authentication" or "统一身份认证"))
-
+        # //*[@id="un"]
+        logger.info('正在搜索是否有机器人图标')
         self.wdwait.until(
             EC.visibility_of_element_located(
-                (By.XPATH, "//div[@class='robot-mag-win small-big-small']")))
+                (By.XPATH, "//*[@id='robot-msg']")))
+
+        # self.wdwait.until(
+        #     EC.visibility_of_element_located(
+        #         (By.XPATH, '//*[@id="login-background"]/div[1]/div/div[2]/div[2]/div/div[1]')))
 
         '''统一身份认证'''
         logger.info('正在尝试登陆融合门户')
@@ -280,6 +293,7 @@ class Search:
 
     def step2(self):
         '''融合门户'''
+        logger.info('正在搜索融合门户标题')
         self.titlewait.until(EC.title_contains("融合门户"))
         self.wdwait.until(EC.visibility_of_element_located((By.XPATH, '//a[@title="教务系统"]/img')))
         logger.info('正在转到教务系统')
@@ -290,6 +304,7 @@ class Search:
 
     def step3(self):
         ''''cookies'''
+        logger.info('正在搜索广州大学教学综合信息服务平台标题')
         self.titlewait.until(EC.title_contains("广州大学教学综合信息服务平台"))
         '''广州大学教学综合信息服务平台'''
         logger.info('提取cookies')
