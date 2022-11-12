@@ -234,10 +234,10 @@ class Search:
             match title:
                 case 'Unified Identity Authentication':
                     self.page = 1
-                    logger.info(f'已重置page为:{self.page}')
+                    logger.info(f'1已重置page为:{self.page}')
                 case '统一身份认证':
                     self.page = 1
-                    logger.info(f'已重置page为:{self.page}')
+                    logger.info(f'2已重置page为:{self.page}')
                 case '融合门户':
                     self.page = 2
                     logger.info(f'已重置page为:{self.page}')
@@ -290,12 +290,14 @@ class Search:
             "document.getElementById('index_login_btn').click()"
         ]:
             self.driver.execute_script(script)
+        logger.info('点了登陆之后再等10秒')
+        time.sleep(10)
         '''统一身份认证'''
 
     def step2(self):
         '''融合门户'''
-        logger.info('正在搜索融合门户标题')
-        self.titlewait.until(EC.title_contains("融合"))
+        # logger.info('正在搜索融合门户标题')
+        # self.titlewait.until(EC.title_contains("融合"))
         # logger.info('正在搜索教务系统图标')
         # self.wdwait.until(EC.visibility_of_element_located((By.XPATH, '//a[@title="教务系统"]/img')))
         logger.info('正在转到教务系统')
