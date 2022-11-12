@@ -342,7 +342,7 @@ class Normal:
             if self.pushplus:
                 for i in self.pushplus:
                     tim = datetime.datetime.now()
-                    data = {"token": i, "title": f'{tim.month}月{tim.day}号空教室', "content":  f'龙哥,这是全天测试版本{tim.hour+}' +self.final}
+                    data = {"token": i, "title": f'{tim.month}月{tim.day}号空教室', "content":  f'龙哥,这是全天测试版本{tim.hour}' +self.final}
                     url = "http://www.pushplus.plus/send/"
                     logger.info(requests.post(url, data=data, timeout=10).text)
             else:
