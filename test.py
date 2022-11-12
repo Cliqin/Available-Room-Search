@@ -295,7 +295,8 @@ class Search:
         '''融合门户'''
         logger.info('正在搜索融合门户标题')
         self.titlewait.until(EC.title_contains("融合门户"))
-        self.wdwait.until(EC.visibility_of_element_located((By.XPATH, '//a[@title="教务系统"]/img')))
+        # logger.info('正在搜索教务系统图标')
+        # self.wdwait.until(EC.visibility_of_element_located((By.XPATH, '//a[@title="教务系统"]/img')))
         logger.info('正在转到教务系统')
 
         # 直接跳转到教务系统
