@@ -94,8 +94,8 @@ class Normal:
 
         self.xuhao = str("32106100117")
         self.mima = str('Aa18319093951!')
-        # self.pushplus = ['da9840d244194425bb1d1435fcd662da', '50ed8dfec78243959c88914a9d61ac13']
-        self.pushplus = ['da9840d244194425bb1d1435fcd662da']
+        self.pushplus = ['da9840d244194425bb1d1435fcd662da', '50ed8dfec78243959c88914a9d61ac13']
+#         self.pushplus = ['da9840d244194425bb1d1435fcd662da']
         self.wdwait = WebDriverWait(self.driver, 90)
         self.titlewait = WebDriverWait(self.driver, 45)
 
@@ -342,7 +342,7 @@ class Normal:
             if self.pushplus:
                 for i in self.pushplus:
                     tim = datetime.datetime.now()
-                    data = {"token": i, "title": f'{tim.month}月{tim.day}号空教室', "content": self.final + '龙哥,教我java'}
+                    data = {"token": i, "title": f'{tim.month}月{tim.day}号空教室', "content":  f'龙哥,这是全天测试版本{tim.hour+}' +self.final}
                     url = "http://www.pushplus.plus/send/"
                     logger.info(requests.post(url, data=data, timeout=10).text)
             else:
