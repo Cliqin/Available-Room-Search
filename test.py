@@ -98,7 +98,7 @@ class Search:
         # self.pushplus = ['da9840d244194425bb1d1435fcd662da', '50ed8dfec78243959c88914a9d61ac13']
         self.pushplus = ['da9840d244194425bb1d1435fcd662da']
         self.wdwait = WebDriverWait(self.driver, 90)
-        self.titlewait = WebDriverWait(self.driver, 30)
+        self.titlewait = WebDriverWait(self.driver, 5)
 
         """浏览器信息"""
         self.url = 'http://jwxt.gzhu.edu.cn/jwglxt/cdjy/cdjy_cxKxcdlb.html?doType=query&gnmkdm=N2155'
@@ -270,7 +270,8 @@ class Search:
         '''统一身份认证'''
 
     def step1(self):
-        # self.titlewait.until(EC.title_contains("Unified Identity Authentication" or "统一身份认证"))
+        # logger.info('正在搜索Unified Identity Authentication标题')
+        # self.titlewait.until(EC.title_contains())
         # //*[@id="un"]
         logger.info('正在搜索是否有机器人图标')
         self.wdwait.until(
@@ -294,11 +295,11 @@ class Search:
     def step2(self):
         '''融合门户'''
         logger.info('正在搜索融合门户标题')
-        self.titlewait.until(EC.title_contains("融合门户"))
+        self.titlewait.until(EC.title_contains("融合"))
         # logger.info('正在搜索教务系统图标')
         # self.wdwait.until(EC.visibility_of_element_located((By.XPATH, '//a[@title="教务系统"]/img')))
         logger.info('正在转到教务系统')
-
+        time.sleep(5)
         # 直接跳转到教务系统
         # self.driver.find_elements(by=By.XPATH, value='//a[@title="教务系统"]')[0].click()
         self.driver.get('http://jwxt.gzhu.edu.cn/sso/driot4login')
@@ -306,14 +307,14 @@ class Search:
     def step3(self):
         ''''cookies'''
         logger.info('正在搜索广州大学教学综合信息服务平台标题')
-        self.titlewait.until(EC.title_contains("广州大学教学综合信息服务平台"))
+        self.titlewait.until(EC.title_contains("广州大学教学综合信息"))
         '''广州大学教学综合信息服务平台'''
         logger.info('提取cookies')
         temp_url = 'http://jwxt.gzhu.edu.cn/jwglxt/cdjy/cdjy_cxKxcdlb.html?gnmkdm=N2155&layout=default&su=32106100117'
         self.driver.get(temp_url)
 
     def step4(self):
-        self.titlewait.until(EC.title_contains("查询空闲教室"))
+        self.titlewait.until(EC.title_contains("空闲教室"))
         logger.info('获取cookies')
         test = self.driver.get_cookies()
         print('cookies为:', test)
