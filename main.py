@@ -322,7 +322,7 @@ class Normal:
             self.data['jcd'] = times_dic[i]
             print(self.data['zcd'], self.data['xqj'], self.data['jcd'])
 
-            response = requests.post(self.url, headers=self.headers, data=self.data)
+            response = requests.post(self.url, headers=self.headers, data=self.data,timeout=60)
 
             # 摒弃依靠写入文件的存储模式
             # logger.info('打开文件写入')
@@ -351,7 +351,7 @@ class Normal:
                     tim = datetime.datetime.now()
                     data = {"token": i,
                             "title": f'第{self.weeking}周{tim.month}月{tim.day}号星期{week_Chinese_list[self.realweekday]}空教室',
-                            "content": f'防止重复码{tim.hour}\n' + self.final}
+                            "content": f'测试中防止重复码{tim.hour}\n' + self.final}
                     url = "http://www.pushplus.plus/send/"
                     logger.info(requests.post(url, data=data, timeout=60).text)
             else:
