@@ -360,7 +360,7 @@ class Normal:
             if self.pushplus:
                 for i in self.pushplus:
                     tim = datetime.datetime.now()
-                    data = {"token": i, "title": f'第{self.weeking}周{tim.month}月{tim.day}号星期{week_Chinese_list[self.realweekday]}空教室查询失败',
+                    data = {"token": i, "title": f'空教室查询失败\t第{self.weeking}周{tim.month}月{tim.day}号星期{week_Chinese_list[self.realweekday]}',
                             "content": f'{logger.error(traceback.format_exc())}'}
                     url = "http://www.pushplus.plus/send/"
                     logger.info(requests.post(url, data=data, timeout=20).text)
