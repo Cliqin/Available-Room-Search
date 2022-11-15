@@ -3,7 +3,7 @@ name: Search_Main
 
 on:
   schedule:
-   - cron : '00 0-3 * * *'
+   - cron : '01 0-4 * * *'
  
 
   workflow_dispatch:
