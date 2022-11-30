@@ -367,6 +367,19 @@ class Normal:
 
         self.flag = True
 
+    def free(self):
+        if self.pushplus:
+                for i in self.pushplus:
+                   
+                    data = {"token": i,
+                            "title": '不会还有人去空教室吧',
+                            "content": '这么想去是吧，怎么不去死'}
+                    url = "http://www.pushplus.plus/send/"
+                    logger.info(requests.post(url, data=data, timeout=240).text)
+        else:
+                logger.error('pushplus失效')
+
+
     def output(self):
         print('星期', self.realweekday)
         print('************\n\n')
@@ -404,4 +417,4 @@ class Normal:
 
 if __name__ == '__main__':
     a = Normal()
-    a.login()
+    a.free()
